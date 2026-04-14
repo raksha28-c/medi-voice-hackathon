@@ -4,7 +4,10 @@ from qdrant_client import QdrantClient
 from fastembed import TextEmbedding
 from qdrant_client.models import PointStruct
 
+# Load model
 model = TextEmbedding()
+
+# Init DB
 client = QdrantClient(":memory:")
 
 client.recreate_collection(
@@ -12,27 +15,20 @@ client.recreate_collection(
     vectors_config={"size": 384, "distance": "Cosine"},
 )
 
+# 🔹 Load dataset
 def init_data():
     print("INIT FUNCTION CALLED")
 
-    data = [
-        {
-            "question": "I have back pain",
-            "answer": "Apply hot compress, avoid heavy lifting, and maintain proper posture."
-        },
-        {
-            "question": "I have fever",
-            "answer": "Drink fluids, take rest, and consult a doctor if it persists."
-        },
-        {
-            "question": "I have headache",
-            "answer": "Drink water, take rest, and reduce screen time."
-        },
-        {
-            "question": "I am coughing",
-            "answer": "Drink warm fluids and try steam inhalation."
-        }
-    ]
+    data = []
+
+    with open("data.txt", "r", encoding="utf-8") as f:
+        for i, line in enumerate(f):
+            if "|" in line:
+                q, a = line.strip().split("|")
+                data.append({
+                    "question": q.strip(),
+                    "answer": a.strip()
+                })
 
     questions = [d["question"] for d in data]
     vectors = list(model.embed(questions))
@@ -49,6 +45,7 @@ def init_data():
         ]
     )
 
+# 🔹 Search
 def search_data(query):
     print("SEARCH FUNCTION CALLED")
 

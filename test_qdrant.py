@@ -14,4 +14,4 @@ while True:
 
     result = search_data(user_input)
 
-    print("Result:", result)
+    print("Answer:", result)
