@@ -1,37 +1,38 @@
 I have back pain | Apply hot compress, avoid heavy lifting, and maintain proper posture.
-My back is hurting | Take rest and use heat therapy for relief.
-Lower back pain | Do light stretching and avoid sitting long hours.
-Pain in lower back | Maintain posture and avoid strain.
+My back is hurting | Take rest and use heat therapy.
+Lower back pain | Do stretching and avoid sitting long hours.
+Back pain after sitting long | Take breaks and stretch regularly.
+Pain in spine | Maintain posture and avoid strain.
 
 I have fever | Drink fluids, take rest, and monitor temperature.
-High temperature | Take paracetamol and stay hydrated.
-Fever for 2 days | Consult a doctor if fever persists.
-I feel hot and weak | It may be fever, stay hydrated.
+I feel very hot | Stay hydrated and rest.
+High fever | Take paracetamol and consult doctor if needed.
+Fever for 3 days | Visit a doctor immediately.
 
 I have headache | Drink water, take rest, and avoid screen time.
-My head is paining | Relax in a quiet place and stay hydrated.
-Severe headache | Seek medical advice if it continues.
-Head pain problem | Reduce stress and hydrate well.
+My head hurts | Relax in a quiet place.
+Severe headache | Consult a doctor.
+Headache due to stress | Reduce stress and sleep well.
 
 I am coughing | Drink warm fluids and try steam inhalation.
-I have cough | Avoid cold food and take warm liquids.
-Dry cough | Use honey and warm water for relief.
-Cold and cough | Stay warm and use steam inhalation.
+I have cough | Avoid cold food and stay warm.
+Dry cough | Use honey and warm water.
+Cold and cough | Stay warm and take steam.
 
 I have stomach pain | Avoid spicy food and eat light meals.
 Stomach ache | Drink warm water and rest.
-Pain in stomach | Could be indigestion, avoid heavy food.
 Gas problem | Avoid oily food and eat slowly.
+Pain after eating | Could be indigestion.
 
 I feel dizzy | Sit down immediately and drink water.
-Dizziness problem | Avoid sudden movements and rest.
-Feeling lightheaded | Stay hydrated and take rest.
+Feeling lightheaded | Stay hydrated and rest.
+Dizziness when standing | Avoid sudden movements.
 
 I have chest pain | Seek immediate medical attention.
-Chest pain while breathing | Consult doctor urgently.
+Chest tightness | Could be serious, consult doctor urgently.
 
-I feel weak | Eat nutritious food and get proper rest.
-I am always tired | Improve sleep and diet habits.
+I feel weak | Eat nutritious food and rest.
+I feel tired always | Improve sleep and diet.
 
 I have sore throat | Drink warm water and avoid cold drinks.
 Throat pain | Gargle with warm salt water.
@@ -41,3 +42,15 @@ Nausea problem | Eat light food and drink fluids.
 
 I have diarrhea | Drink ORS and stay hydrated.
 Loose motion | Avoid outside food and drink clean water.
+
+I have body pain | Take rest and stay hydrated.
+Muscle pain | Apply hot compress and relax.
+
+I have cold | Stay warm and drink warm fluids.
+Runny nose | Use steam inhalation.
+
+I have breathing problem | Seek medical attention immediately.
+Shortness of breath | Could be serious, consult doctor.
+
+I feel anxiety | Take deep breaths and relax.
+Stress problem | Try meditation and rest.
