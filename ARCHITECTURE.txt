@@ -1,0 +1,266 @@
+MEDIVOICE BACKEND - ARCHITECTURE DIAGRAM
+════════════════════════════════════════════════════════════════════════════════
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                          FLOW: Patient to Response                          │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+  1. PATIENT SPEAKS                    2. VAPI SENDS TRANSCRIPT
+  ─────────────────────               ──────────────────────────
+       "बुखार"              ────>      POST /vapi-webhook
+       (Fever)                         {"message": {"type": "assistant-request",
+                                                    "transcript": "बुखार"}}
+
+
+                   3. BACKEND PROCESSES
+                   ───────────────────
+                   
+                   main.py receives webhook:
+                   ├─ Extract transcript: "बुखार"
+                   ├─ Search mock_qdrant.py
+                   │  └─ Finds: Fever (moderate)
+                   ├─ Call prompt.py
+                   │  └─ Send to Gemini 1.5 Flash
+                   ├─ Gemini generates response
+                   │  (in Hindi, max 2-3 sentences)
+                   ├─ Log call to call_log[]
+                   └─ Return response
+
+
+  4. RESPONSE SENT BACK               5. VAPI SPEAKS TO PATIENT
+  ──────────────────────             ──────────────────────────
+  {"assistant":                        "खूब आराम करें और
+   {"content":                          पानी पिएं..."
+   "खूब आराम करें..."}}
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                            FILE DEPENDENCIES                                │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+  .env
+   ├─ prompt.py     ← Loads GEMINI_API_KEY
+   └─ test_gemini.py ← Loads GEMINI_API_KEY
+
+
+  mock_qdrant.py
+   └─ main.py       ← Calls search_symptoms()
+
+
+  prompt.py
+   └─ main.py       ← Calls generate_health_response()
+                      Calls generate_booking_confirmation()
+
+
+  main.py
+   ├─ Imports: mock_qdrant, prompt
+   ├─ Runs on: localhost:8000
+   └─ Provides: 4 REST endpoints
+
+
+  streamlit_app_app.py
+   └─ Calls: main.py endpoints (via httpx)
+      └─ Runs on: localhost:8501
+
+
+  requirements.txt
+   └─ All Python dependencies
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                        SYMPTOM DATABASE STRUCTURE                           │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+  mock_qdrant.py
+  
+  SYMPTOM_DATABASE = [
+    {
+      "hi": "पेट दर्द",              ← Hindi symptom name
+      "en": "Stomach pain",          ← English symptom name
+      "condition": "Gastroenteritis",← Medical condition
+      "triage": "moderate",          ← Severity (mild/moderate/urgent)
+      "advice_hi": "हल्का खाना...",  ← Hindi medical advice
+      "advice_en": "Eat light food...",← English medical advice
+      "specialist": "General Physician"← Recommended specialist
+    },
+    ... (9 more symptoms)
+  ]
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                            ENDPOINT RESPONSES                               │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+  POST /vapi-webhook (from VAPI)
+  ──────────────────────────────
+  INPUT:  {"message": {"type": "assistant-request", "transcript": "..."}}
+  OUTPUT: {"assistant": {"content": "Warm AI response"}}
+  
+  SUCCESS: Response from Gemini
+  ERROR: "Mujhe samajh nahi aaya. Kripya dobara bolein." (status 200)
+
+
+  POST /test (for manual testing from Streamlit)
+  ──────────────────────────────────────────────
+  INPUT:  {"query": "stomach pain"}
+  OUTPUT: {
+    "query": "stomach pain",
+    "condition": "Gastroenteritis or Indigestion",
+    "triage": "moderate",
+    "ai_response": "Eat light food and drink plenty of water..."
+  }
+
+
+  GET /call-log (from Streamlit dashboard)
+  ────────────────────────────────────────
+  OUTPUT: {
+    "calls": [
+      {
+        "timestamp": "2024-04-14T03:27:59",
+        "patient_said": "बुखार",
+        "condition": "Viral infection",
+        "triage": "moderate",
+        "ai_response": "खूब आराम करें..."
+      },
+      ... (more calls)
+    ]
+  }
+
+
+  GET /health (system check)
+  ──────────────────────────
+  OUTPUT: {
+    "status": "MediVoice running",
+    "total_calls": 5
+  }
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                        LANGUAGE DETECTION FLOW                              │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+  Patient speaks in Hindi: "बुखार"
+    ↓
+  prompt.py detects: is_hindi = True (checks for Unicode range 0900-097F)
+    ↓
+  Uses Hindi advice from symptom_data["advice_hi"]
+    ↓
+  Generates response in Hindi via Gemini
+    ↓
+  Returns: "खूब आराम करें..." (in Hindi)
+
+
+  Patient speaks in English: "fever"
+    ↓
+  prompt.py detects: is_hindi = False
+    ↓
+  Uses English advice from symptom_data["advice_en"]
+    ↓
+  Generates response in English via Gemini
+    ↓
+  Returns: "Rest well and drink water..." (in English)
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                         TRIAGE INDICATORS                                   │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+  streamlit_app_app.py displays:
+
+  🟢 MILD (green dot)
+     Examples: Headache, Cough, Dizziness, Joint pain
+     Response: "Try home remedies, monitor symptoms"
+
+  🟡 MODERATE (orange dot)
+     Examples: Stomach pain, Fever, Vomiting, Diarrhea
+     Response: "Follow medical advice, see doctor in 2-3 days"
+
+  🔴 URGENT (red dot)
+     Examples: Breathing difficulty, Chest pain
+     Response: "Abhi 108 par call karein" (Call 108 immediately!)
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                       INTEGRATION DAY - ONE CHANGE                          │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+  File: main.py
+  Line: 3
+
+  BEFORE (mock database):
+  ──────────────────────
+  from mock_qdrant import search_symptoms
+  from prompt import generate_health_response, ...
+
+  AFTER (real Qdrant):
+  ───────────────────
+  from qdrant_service.search import search_symptoms
+  from prompt import generate_health_response, ...
+
+  Rest of main.py stays EXACTLY THE SAME ✓
+  All other files stay EXACTLY THE SAME ✓
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                        SYSTEM STARTUP SEQUENCE                              │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+  T=0s    User runs: python main.py
+          └─ FastAPI app starts on localhost:8000
+          └─ Loads prompt.py (which loads .env)
+          └─ Ready for POST /vapi-webhook requests ✓
+
+  T=0s    User runs: streamlit run streamlit_app_app.py
+          └─ Streamlit server starts on localhost:8501
+          └─ Opens browser automatically
+          └─ Begins polling GET /call-log every 2 seconds ✓
+
+  T=0s    User (optional): python test_gemini.py
+          └─ Tests Gemini connection
+          └─ Prints response
+          └─ Exits (don't need to keep running) ✓
+
+  T>0s    System ready for patient queries!
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                      ERROR HANDLING FLOW                                    │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+  /vapi-webhook receives malformed request
+      ↓
+  try/except catches exception
+      ↓
+  Returns: {"assistant": {"content": "Mujhe samajh nahi aaya..."}}
+      ↓
+  Status code: 200 (even on error)
+  
+  Why 200? VAPI expects 200 for any valid response, even error messages.
+
+
+  Query not in symptom database
+      ↓
+  search_symptoms() returns empty list
+      ↓
+  AI generates generic response:
+      "Kripya apni samasyaa baare mein aur bataayen."
+      (Please tell more about your problem)
+      ↓
+  Logged with condition="Unknown", triage="unknown"
+
+
+  Gemini API fails
+      ↓
+  try/except in prompt.py catches error
+      ↓
+  Falls back to: "Mujhe samajh nahi aaya..."
+      ↓
+  Graceful degradation ✓
+
+
+════════════════════════════════════════════════════════════════════════════════
+TOTAL: 4 terminals running (Backend + Dashboard + Tests + Monitoring)
+DEPENDENCIES: 6 Python libraries
+API CALLS: Every request → Gemini 1.5 Flash (free tier)
+PERSISTENCE: Call logs in memory (resets when backend restarts)
+════════════════════════════════════════════════════════════════════════════════

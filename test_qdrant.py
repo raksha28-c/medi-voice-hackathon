@@ -1,4 +1,4 @@
-from qdrant_service.vector_store import init_data, search_data
+from qdrant_service.local_store import init_data, search_data
 
 print("Starting...")
 
